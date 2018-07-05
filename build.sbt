@@ -9,7 +9,8 @@ libraryDependencies  ++= Seq(
             //"org.scalanlp" %% "breeze-process" % "0.4-SNAPSHOT",
             //"org.scalanlp" %% "breeze-viz" % "0.4-SNAPSHOT",
             "org.specs2" %% "specs2" % "1.14" % "test",
-            "org.scalatest" % "scalatest_2.10" % "1.9.1" % "test"
+            "org.scalatest" % "scalatest_2.10" % "1.9.1" % "test",
+            "net.sourceforge.f2j" % "arpack_combined_all" % "0.1"
 )
 
 

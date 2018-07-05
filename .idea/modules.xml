@@ -2,6 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../.idea/modules/ideaprojects.iml" filepath="$PROJECT_DIR$/../.idea/modules/ideaprojects.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../.idea/modules/ideaprojects-build.iml" filepath="$PROJECT_DIR$/../.idea/modules/ideaprojects-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/neural-network.iml" filepath="$PROJECT_DIR$/.idea/modules/neural-network.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/neural-network-build.iml" filepath="$PROJECT_DIR$/.idea/modules/neural-network-build.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/simple-scala-nn.iml" filepath="$PROJECT_DIR$/.idea/simple-scala-nn.iml" />
     </modules>
   </component>
