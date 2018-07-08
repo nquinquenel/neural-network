@@ -18,10 +18,30 @@ object Runner {
   def main(args: Array[String]): Unit = {
     time {
       //choose the example you want to run
-      irisExample()
+//      irisExample()
 //      xorExample()
 //      parityExample()
+      digitsExample()
     } 
+  }
+
+  def digitsExample(): Unit = {
+
+    //Reading MNIST data
+    val lines = fromFile("example_data/train.csv").getLines.drop(1).toArray.map(_.split(","))
+    def getPixels(sr: Array[String]): Array[Int] = {
+        assert(sr.size == 785)
+        var ret:Array[Int] = new Array[Int](784)
+        for (i <- 1 to 784) ret(i-1) = sr(i).toInt
+        ret
+    }
+
+    var coords: Array[Array[Int]] = lines.map(getPixels(_))
+    val labels: Array[String] = lines.map(l => l(0))
+
+    println("Coords 0: " + coords(0)(0).toString)
+    println("Label 0: " + labels(0))
+
   }
   
   def irisExample(): Unit = {
