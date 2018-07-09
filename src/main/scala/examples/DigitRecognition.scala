@@ -66,7 +66,7 @@ object Runner {
     //Neural network
     val neuronsInLayers = List(784, 30, 10)
     val sigmoid = new SigmoidFunction(0.55)
-    val gamma = 0.2
+    val gamma = 0.3
     val nn: NeuralNetwork = new FeedForwardNeuralNetwork(neuronsInLayers, sigmoid, gamma)
 
     val r = new Random()
