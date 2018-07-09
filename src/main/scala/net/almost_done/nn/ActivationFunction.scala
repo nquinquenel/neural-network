@@ -29,9 +29,7 @@ protected trait ActivationFunction extends Function1[Double, Double] {
     if(abs(result - bounds._1) < abs(result - bounds._2)) bounds._1 else bounds._2
   }
   
-  def withinBounds(x: Double): Boolean = {
-    x >= bounds._1 && x <= bounds ._2
-  }
+  def withinBounds(x: Double): Boolean = x >= bounds._1 && x <= bounds ._2
   
   def withinBounds(x: Int): Boolean = x >= bounds._1 && x <= bounds ._2
   

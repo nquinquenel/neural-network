@@ -7,7 +7,7 @@ object Helpers {
   def time(f: => Unit)={
     val s = System.currentTimeMillis
     f
-    print("execution time in seconds: ")
+    print("Execution time in seconds: ")
     println((System.currentTimeMillis - s) * 1.0 / 1000.0)
   }
 }
