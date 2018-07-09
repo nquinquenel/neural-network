@@ -28,19 +28,75 @@ object Runner {
   def digitsExample(): Unit = {
 
     //Reading MNIST data
+    //I save 7 500 images from the 42 000 for the validating part
     val lines = fromFile("example_data/train.csv").getLines.drop(1).toArray.map(_.split(","))
-    def getPixels(sr: Array[String]): Array[Int] = {
+    def getPixels(sr: Array[String]): Array[Double] = {
         assert(sr.size == 785)
-        var ret:Array[Int] = new Array[Int](784)
-        for (i <- 1 to 784) ret(i-1) = sr(i).toInt
+        var ret:Array[Double] = new Array[Double](784)
+        for (i <- 1 to 784) ret(i-1) = sr(i).toDouble
         ret
     }
 
-    var coords: Array[Array[Int]] = lines.map(getPixels(_))
+    var coords: Array[Array[Double]] = lines.map(getPixels(_))
     val labels: Array[String] = lines.map(l => l(0))
 
-    println("Coords 0: " + coords(0)(0).toString)
-    println("Label 0: " + labels(0))
+    println("Reading done.")
+
+    //Normalizing the data
+    for(idx <- Range(0, 783).inclusive) {
+      val min = coords.map(characteristic => characteristic(idx)).min
+      val max = coords.map(characteristic => characteristic(idx)).max
+
+      val spread = max - min
+      if (spread != 0) {
+        coords.map(arr => arr(idx) = ((arr(idx) - min) / spread))
+      }
+    }
+
+    println("Normalization done.")
+
+    //Convert labels to 1-0 vectors
+    val labelMap = HashMap[String, List[Double]](("0", List(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)),
+                    ("1", List(0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)),
+                    ("2", List(0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)),
+                    ("3", List(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)),
+                    ("4", List(0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)),
+                    ("5", List(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0)),
+                    ("6", List(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)),
+                    ("7", List(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0)),
+                    ("8", List(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)),
+                    ("9", List(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0)))
+    val classificationVectors: Array[List[Double]] = labels.map(l => labelMap(l))
+
+    //Neural network
+    val neuronsInLayers = List(784, 30, 10)
+    val sigmoid = new SigmoidFunction(1.5)
+    val gamma = 0.3
+    val nn: NeuralNetwork = new FeedForwardNeuralNetwork(neuronsInLayers, sigmoid, gamma)
+
+    val pairs = coords.zip(classificationVectors).toSeq
+
+    //the simplest, imperfect way of verification - we split the example set into training and testing sets
+    val (testing, training) = pairs.splitAt(7500)
+
+    while(nn.getMaxDelta > 0.0001) for(train <- training) {
+      nn.train(train._1, train._2)
+    }
+
+    println("Training done.")
+
+    /*
+     * testing the nn
+     */
+    val results = for(test <- testing) yield {
+      nn.classify(test._1).map(sigmoid.customRound(_)) == test._2.map(sigmoid.customRound(_))
+    }
+
+    println("Testing done.")
+
+    val successCount = results.count(r => r)
+
+    println("Upon testing the neural network got %d/7500 results right." format (successCount))
 
   }
   
@@ -85,7 +141,7 @@ object Runner {
      * 
      * choosing training and testing data
      */
-    
+
     val r = new Random()
     
     val pairs = r.shuffle(coords.zip(classificationVectors).toSeq)
