@@ -1,4 +1,4 @@
-# Digit recognition#
+# Digit recognition #
 Digit recognition with the use of a simple feed-forward neural network made in Scala.
 
 It is using the library **simple-scala-nn** made by **nietaki** : https://github.com/nietaki/simple-scala-nn
