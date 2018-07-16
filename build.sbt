@@ -10,7 +10,10 @@ libraryDependencies  ++= Seq(
             //"org.scalanlp" %% "breeze-viz" % "0.4-SNAPSHOT",
             "org.specs2" %% "specs2" % "1.14" % "test",
             "org.scalatest" % "scalatest_2.10" % "1.9.1" % "test",
-            "net.sourceforge.f2j" % "arpack_combined_all" % "0.1"
+            "net.sourceforge.f2j" % "arpack_combined_all" % "0.1",
+            "org.apache.poi" % "poi" % "3.15-beta2",
+            "org.apache.poi" % "poi-ooxml" % "3.15-beta2",
+            "org.apache.poi" % "poi-ooxml-schemas" % "3.15-beta2"
 )
 
 
