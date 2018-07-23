@@ -18,13 +18,24 @@ import org.apache.poi.ss.usermodel.{ DataFormatter, WorkbookFactory, Row }
 import java.io.File
 import collection.JavaConversions._ // lets you iterate over a java iterable
 import scala.collection.mutable.ArrayBuffer
+import co.theasi.plotly._
 
 object Runner {
   def main(args: Array[String]): Unit = {
     time {
       //digitsExample()
       distributedExample()
+      //testGraph()
     } 
+  }
+
+  def testGraph(): Unit = {
+    val xs = (0.0 to 2.0 by 0.1)
+    val ys = xs.map { x => x*x }
+
+    val plot = Plot().withScatter(xs, ys)
+
+    draw(plot, "my-first-plot")
   }
 
   def distributedExample(): Unit = {
@@ -70,14 +81,14 @@ object Runner {
     println("Normalization done.")
 
     //Convert labels to 1-0 vectors
-    val labelMap = HashMap[String, List[Double]](("Mesos", List(1.0, 0.0)),
-      ("Omega", List(0.0, 1.0)))
+    val labelMap = HashMap[String, List[Double]](("Mesos", List(1.0)),
+      ("Omega", List(0.0)))
     val classificationVectors: ArrayBuffer[List[Double]] = labels.map(l => labelMap(l))
 
     //Neural network
-    val neuronsInLayers = List(2, 15, 2)
-    val sigmoid = new SigmoidFunction(0.55)
-    val gamma = 0.3
+    val neuronsInLayers = List(2, 10, 1)
+    val sigmoid = new SigmoidFunction(1)
+    val gamma = 0.1
     val nn: NeuralNetwork = new FeedForwardNeuralNetwork(neuronsInLayers, sigmoid, gamma)
 
     val r = new Random()
@@ -88,9 +99,23 @@ object Runner {
     val split = 30
     val (testing, training) = pairs.splitAt(split)
 
-    while(nn.getMaxDelta > 0.0001) for(train <- training) {
-      nn.train(train._1, train._2)
+    var epoch = 0
+    val tab_plot_x = new ArrayBuffer[Double](136)
+    val tab_plot_y = new ArrayBuffer[Double](136)
+
+    while(nn.getMaxDelta > 0.0001) {
+      epoch += 1
+      tab_plot_x.clear()
+      tab_plot_y.clear()
+      for(train <- training) {
+        val plot_tmp = nn.train(train._1, train._2)
+
+        tab_plot_y += plot_tmp(0)
+        tab_plot_x += plot_tmp(1)
+      }
     }
+
+    println("Epoch number: " + epoch)
 
     println("Training done.")
 
@@ -105,6 +130,19 @@ object Runner {
     val percentage = BigDecimal(((successCount:Double)/(split:Double))*100).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
 
     println(s"Upon testing the neural network got $successCount/$split results right -> $percentage%.")
+
+    val p = Plot()
+      .withScatter(tab_plot_x, tab_plot_y, ScatterOptions()
+        .mode(ScatterMode.Marker)
+        .name("Above")
+        .marker(
+          MarkerOptions()
+            .size(10)
+            .color(152, 0, 0, 0.8)
+            .lineWidth(2)
+            .lineColor(0, 0, 0)))
+
+    draw(p, "mesos-omega", writer.FileOptions(overwrite=true))
   }
 
   def digitsExample(): Unit = {

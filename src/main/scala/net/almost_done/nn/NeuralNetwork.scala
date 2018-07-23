@@ -1,5 +1,7 @@
 package net.almost_done.nn
 
+import scala.collection.mutable.ArrayBuffer
+
 
 /**
  * a common trait for all neural networks. All inheriting classes need to implement [[net.almost_done.nn!teachImpl]] and `classifyImpl` methods
@@ -47,7 +49,7 @@ trait NeuralNetwork {
    * @param desiredResult the sequence - vector of Doubles the input should be classified as. This parameter will also be verfied for being within the bounds
    * defined by `activationFunction` 
    */
-  def train(input: Seq[Double], desiredResult: Seq[Double]): Unit = {
+  def train(input: Seq[Double], desiredResult: Seq[Double]): ArrayBuffer[Double] = {
     assert(input.forall(activationFunction.withinBounds(_)), oob)
     assert(desiredResult.forall(activationFunction.withinBounds(_)), oob)
     
@@ -58,7 +60,7 @@ trait NeuralNetwork {
    * the teaching function to be implemented by subclasses. If in the course of teaching you need to invoke the classification
    * method, use `teach` not `teachImpl` for added arguments checks
    */
-  protected def trainImpl(input: Seq[Double], desiredResult: Seq[Double]): Unit
+  protected def trainImpl(input: Seq[Double], desiredResult: Seq[Double]): ArrayBuffer[Double]
   
   /*
    * Other interfaces in case it's easier to deal with Ints or Bools

@@ -1,10 +1,11 @@
 package net.almost_done.nn
 
-import scala.collection.mutable.Buffer
-
+import scala.collection.mutable.{ArrayBuffer, Buffer}
 import breeze.linalg.DenseMatrix
 import breeze.linalg.DenseVector
+
 import math.abs
+import co.theasi.plotly._
 
 /**
  * layerCounts describes the number of neurons in each layer
@@ -76,8 +77,9 @@ class FeedForwardNeuralNetwork( _neuronCounts: Seq[Int],
     //forward propagation
     for(i <- Range(0, M)) {
       h(i+1) := w(i) * V(i)
-      
+
       V(i+1) := h(i+1).map(activationFunction)
+
       if(i+1 != M) {
         h(i+1)(0) = Double.MaxValue //this is actually redundant but might be better for transparency reasons
         V(i+1)(0) = BIAS_VALUE
@@ -87,13 +89,18 @@ class FeedForwardNeuralNetwork( _neuronCounts: Seq[Int],
     V(M).toArray
   }
   
-  protected def trainImpl(input: Seq[Double], desiredResult: Seq[Double]) = {
+  protected def trainImpl(input: Seq[Double], desiredResult: Seq[Double]): ArrayBuffer[Double] = {
     assert(input.length == V(0).length - 1)
     assert(desiredResult.length == V(M).length)
     
     classify(input) //sets V and h
+
     
     val eta: DenseVector[Double] = DenseVector(desiredResult : _*)
+
+    val ret = new ArrayBuffer[Double]
+    ret += V(2)(0)
+    ret += eta(0)
     
     //backpropagation - last layer
     delta(M) := h(M).map(activationFunction.derivative) :* (eta - V(M))
@@ -109,5 +116,7 @@ class FeedForwardNeuralNetwork( _neuronCounts: Seq[Int],
       val weightAdjustments = (delta(m) * V(m-1).t :* gamma)
       w(m-1) := w(m-1) + weightAdjustments
     }
+
+    ret
   }
 }
