@@ -100,18 +100,18 @@ object Runner {
     val (testing, training) = pairs.splitAt(split)
 
     var epoch = 0
-    val tab_plot_x = new ArrayBuffer[Double](136)
-    val tab_plot_y = new ArrayBuffer[Double](136)
+    val tab_plot1_x = new ArrayBuffer[Double](136)
+    val tab_plot1_y = new ArrayBuffer[Double](136)
 
     while(nn.getMaxDelta > 0.0001) {
       epoch += 1
-      tab_plot_x.clear()
-      tab_plot_y.clear()
+      tab_plot1_x.clear()
+      tab_plot1_y.clear()
       for(train <- training) {
         val plot_tmp = nn.train(train._1, train._2)
 
-        tab_plot_y += plot_tmp(0)
-        tab_plot_x += plot_tmp(1)
+        tab_plot1_y += plot_tmp(0)
+        tab_plot1_x += plot_tmp(1)
       }
     }
 
@@ -119,8 +119,13 @@ object Runner {
 
     println("Training done.")
 
+    val tab_plot2_x = new ArrayBuffer[Double](30)
+    val tab_plot2_y = new ArrayBuffer[Double](30)
+
     //Testing the neural network
     val results = for(test <- testing) yield {
+      tab_plot2_y += nn.classify(test._1)(0)
+      tab_plot2_x += test._2.map(sigmoid.customRound(_)).head.toDouble
       nn.classify(test._1).map(sigmoid.customRound(_)) == test._2.map(sigmoid.customRound(_))
     }
 
@@ -131,8 +136,8 @@ object Runner {
 
     println(s"Upon testing the neural network got $successCount/$split results right -> $percentage%.")
 
-    val p = Plot()
-      .withScatter(tab_plot_x, tab_plot_y, ScatterOptions()
+    val training_plot = Plot()
+      .withScatter(tab_plot1_x, tab_plot1_y, ScatterOptions()
         .mode(ScatterMode.Marker)
         .name("Above")
         .marker(
@@ -142,7 +147,19 @@ object Runner {
             .lineWidth(2)
             .lineColor(0, 0, 0)))
 
-    draw(p, "mesos-omega", writer.FileOptions(overwrite=true))
+    val testing_plot = Plot()
+      .withScatter(tab_plot2_x, tab_plot2_y, ScatterOptions()
+        .mode(ScatterMode.Marker)
+        .name("Above")
+        .marker(
+          MarkerOptions()
+            .size(10)
+            .color(152, 0, 0, 0.8)
+            .lineWidth(2)
+            .lineColor(0, 0, 0)))
+
+    draw(training_plot, "training-plot", writer.FileOptions(overwrite=true))
+    draw(testing_plot, "testing-plot", writer.FileOptions(overwrite=true))
   }
 
   def digitsExample(): Unit = {

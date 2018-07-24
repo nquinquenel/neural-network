@@ -85,7 +85,7 @@ class FeedForwardNeuralNetwork( _neuronCounts: Seq[Int],
         V(i+1)(0) = BIAS_VALUE
       }
     }
-    
+
     V(M).toArray
   }
   
