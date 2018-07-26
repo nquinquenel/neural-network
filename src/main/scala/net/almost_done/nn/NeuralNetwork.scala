@@ -1,6 +1,8 @@
 package net.almost_done.nn
 
-import scala.collection.mutable.ArrayBuffer
+import breeze.linalg.DenseVector
+
+import scala.collection.mutable.{ArrayBuffer, Buffer}
 
 
 /**

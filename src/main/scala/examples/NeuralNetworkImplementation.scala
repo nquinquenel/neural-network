@@ -103,7 +103,7 @@ object Runner {
     val tab_plot1_x = new ArrayBuffer[Double](136)
     val tab_plot1_y = new ArrayBuffer[Double](136)
 
-    while(nn.getMaxDelta > 0.0001) {
+    while(nn.getMaxDelta > 0.00001) {
       epoch += 1
       tab_plot1_x.clear()
       tab_plot1_y.clear()
@@ -200,8 +200,40 @@ object Runner {
         .mode(ScatterMode.Line)
         .name("Y = T"))
 
+    val distributed_points = (0 until 136)
+    val tab_plot1_y_error = new ArrayBuffer[Double](136)
+
+    for (i <- Range(0, 136)) {
+      tab_plot1_y_error += tab_plot1_x(i) - tab_plot1_y(i)
+    }
+
+    val training_plot_error = Plot()
+      .withScatter(distributed_points, tab_plot1_x, ScatterOptions()
+        .mode(ScatterMode.Line)
+        .name("Expected"))
+      .withScatter(distributed_points, tab_plot1_y, ScatterOptions()
+        .mode(ScatterMode.Line)
+        .name("Reality"))
+
+    val distributed_points2 = (0 until 30)
+    val tab_plot2_y_error = new ArrayBuffer[Double](136)
+
+    for (i <- Range(0, 30)) {
+      tab_plot2_y_error += tab_plot2_x(i) - tab_plot2_y(i)
+    }
+
+    val testing_plot_error = Plot()
+      .withScatter(distributed_points, tab_plot2_x, ScatterOptions()
+        .mode(ScatterMode.Line)
+        .name("Expected"))
+      .withScatter(distributed_points, tab_plot2_y, ScatterOptions()
+        .mode(ScatterMode.Line)
+        .name("Reality"))
+
     draw(training_plot, "training-plot", writer.FileOptions(overwrite=true))
     draw(testing_plot, "testing-plot", writer.FileOptions(overwrite=true))
+    draw(training_plot_error, "training-plot-error", writer.FileOptions(overwrite=true))
+    draw(testing_plot_error, "testing-plot-error", writer.FileOptions(overwrite=true))
   }
 
   def digitsExample(): Unit = {
