@@ -115,6 +115,21 @@ object Runner {
       }
     }
 
+    val points1_x: ArrayBuffer[Double] = ArrayBuffer(0, 1)
+    val points1_y: ArrayBuffer[Double] = ArrayBuffer(0, 0)
+    val total1_y: ArrayBuffer[Double] = ArrayBuffer(0, 0)
+    for (i <- Range(0, 136)) {
+      if (tab_plot1_x(i) == 0) {
+        total1_y(0) += 1
+        points1_y(0) += tab_plot1_y(i)
+      } else {
+        total1_y(1) += 1
+        points1_y(1) += tab_plot1_y(i)
+      }
+    }
+    points1_y(0) = points1_y(0) / total1_y(0)
+    points1_y(1) = points1_y(1) / total1_y(1)
+
     println("Epoch number: " + epoch)
 
     println("Training done.")
@@ -136,20 +151,20 @@ object Runner {
 
     println(s"Upon testing the neural network got $successCount/$split results right -> $percentage%.")
 
-    val points_x: ArrayBuffer[Double] = ArrayBuffer(0, 1)
-    val points_y: ArrayBuffer[Double] = ArrayBuffer(0, 0)
-    val total_y: ArrayBuffer[Double] = ArrayBuffer(0, 0)
+    val points2_x: ArrayBuffer[Double] = ArrayBuffer(0, 1)
+    val points2_y: ArrayBuffer[Double] = ArrayBuffer(0, 0)
+    val total2_y: ArrayBuffer[Double] = ArrayBuffer(0, 0)
     for (i <- Range(0, 30)) {
       if (tab_plot2_x(i) == 0) {
-        total_y(0) += 1
-        points_y(0) += tab_plot2_y(i)
+        total2_y(0) += 1
+        points2_y(0) += tab_plot2_y(i)
       } else {
-        total_y(1) += 1
-        points_y(1) += tab_plot2_y(i)
+        total2_y(1) += 1
+        points2_y(1) += tab_plot2_y(i)
       }
     }
-    points_y(0) = points_y(0) / total_y(0)
-    points_y(1) = points_y(1) / total_y(1)
+    points2_y(0) = points2_y(0) / total2_y(0)
+    points2_y(1) = points2_y(1) / total2_y(1)
 
     val training_plot = Plot()
       .withScatter(tab_plot1_x, tab_plot1_y, ScatterOptions()
@@ -161,6 +176,12 @@ object Runner {
             .color(152, 0, 0, 0.8)
             .lineWidth(2)
             .lineColor(0, 0, 0)))
+      .withScatter(points1_x, points1_y, ScatterOptions()
+        .mode(ScatterMode.Line)
+        .name("Fit"))
+      .withScatter(ArrayBuffer(0, 1), ArrayBuffer(0, 1), ScatterOptions()
+        .mode(ScatterMode.Line)
+        .name("Y = T"))
 
     val testing_plot = Plot()
       .withScatter(tab_plot2_x, tab_plot2_y, ScatterOptions()
@@ -172,7 +193,7 @@ object Runner {
             .color(152, 0, 0, 0.8)
             .lineWidth(2)
             .lineColor(0, 0, 0)))
-      .withScatter(points_x, points_y, ScatterOptions()
+      .withScatter(points2_x, points2_y, ScatterOptions()
         .mode(ScatterMode.Line)
         .name("Fit"))
       .withScatter(ArrayBuffer(0, 1), ArrayBuffer(0, 1), ScatterOptions()
