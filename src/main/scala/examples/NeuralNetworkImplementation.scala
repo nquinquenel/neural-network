@@ -71,7 +71,7 @@ object Runner {
 
     println("Reading done.")
 
-    val split = 50
+    val split = 70
 
     /*
      * Plots variables
@@ -132,10 +132,10 @@ object Runner {
     val (validating, training) = trainingtmp.splitAt(split)
 
     var epoch = 0
-    var maxEpoch = 100
+    var epochStop = 0
 
-    //while(nn.getMaxDelta > 0.00001) {
-    while(epoch != maxEpoch) {
+    while(nn.getMaxDelta > 0.000001 && epoch != 3000) {
+    //while(epoch != maxEpoch) {
       epoch += 1
       if (activate_plots) {
         tab_plot1_x.clear()
@@ -155,7 +155,8 @@ object Runner {
       }
 
       var validation_tmp_result = tmp_results.count(r => r)
-      if (validation_highest < validation_tmp_result) {
+      if (validation_highest <= validation_tmp_result) {
+        epochStop = epoch
         validation_weights = nn.getWeights()
         validation_highest = validation_tmp_result
       }
@@ -176,9 +177,12 @@ object Runner {
       points1_y(1) = points1_y(1) / total1_y(1)
     }
 
-    println("Epoch number: " + epoch)
+    println("Epoch number in total: " + epoch + " (max is 3000)")
+    println("Best result on validation set : " + validation_highest + "/" + split + " on epoch n°" + epochStop)
 
     println("Training done.")
+
+    nn.setWeights(validation_weights)
 
     //Testing the neural network
     var results = for(test <- testing) yield {
@@ -193,25 +197,6 @@ object Runner {
 
     var successCount = results.count(r => r)
     var percentage = BigDecimal(((successCount:Double)/(split:Double))*100).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
-
-    println(s"Upon testing the neural network got $successCount/$split results right -> $percentage%.")
-
-    println(validation_highest)
-    nn.setWeights(validation_weights)
-
-    //Testing the neural network
-    results = for(test <- testing) yield {
-      if (activate_plots) {
-        tab_plot2_y += nn.classify(test._1)(0)
-        tab_plot2_x += test._2.map(sigmoid.customRound(_)).head.toDouble
-      }
-      nn.classify(test._1).map(sigmoid.customRound(_)) == test._2.map(sigmoid.customRound(_))
-    }
-
-    println("Testing done.")
-
-    successCount = results.count(r => r)
-    percentage = BigDecimal(((successCount:Double)/(split:Double))*100).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
 
     println(s"Upon testing the neural network got $successCount/$split results right -> $percentage%.")
 
