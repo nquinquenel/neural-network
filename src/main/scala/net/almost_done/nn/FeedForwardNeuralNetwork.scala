@@ -5,7 +5,6 @@ import breeze.linalg.DenseMatrix
 import breeze.linalg.DenseVector
 
 import math.abs
-import co.theasi.plotly._
 
 /**
  * layerCounts describes the number of neurons in each layer
@@ -36,7 +35,7 @@ class FeedForwardNeuralNetwork( _neuronCounts: Seq[Int],
   /**
    * neuron state vectors
    */
-  val V: Buffer[DenseVector[Double]] = (neuronCounts map { layerCount => DenseVector.ones[Double](layerCount)}).toBuffer
+  var V: Buffer[DenseVector[Double]] = (neuronCounts map { layerCount => DenseVector.ones[Double](layerCount)}).toBuffer
   
   /**
    * activation vectors
@@ -67,6 +66,20 @@ class FeedForwardNeuralNetwork( _neuronCounts: Seq[Int],
   
   def getMaxDelta(): Double = {
     delta.tail.map(_.map(abs(_)).max).max
+  }
+
+  def getWeights(): ArrayBuffer[DenseMatrix[Double]] = {
+    val ret = new ArrayBuffer[DenseMatrix[Double]](w.size)
+    for (i <- Range(0, w.size)) {
+      ret += w(i).copy
+    }
+    ret
+  }
+
+  def setWeights(newV: ArrayBuffer[DenseMatrix[Double]]) = {
+    for (i <- Range(0, w.size)) {
+      w(i) = newV(i).copy
+    }
   }
   
   def classifyImpl(input: Seq[Double]): Seq[Double] = {

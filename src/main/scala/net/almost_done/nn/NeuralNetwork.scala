@@ -1,6 +1,6 @@
 package net.almost_done.nn
 
-import breeze.linalg.DenseVector
+import breeze.linalg.{DenseMatrix, DenseVector}
 
 import scala.collection.mutable.{ArrayBuffer, Buffer}
 
@@ -40,6 +40,10 @@ trait NeuralNetwork {
    * network. 
    */
   def getMaxDelta(): Double
+
+  def getWeights(): ArrayBuffer[DenseMatrix[Double]]
+
+  def setWeights(newW: ArrayBuffer[DenseMatrix[Double]]): Unit
   
   
    /**
