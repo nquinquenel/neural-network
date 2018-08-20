@@ -26,8 +26,9 @@ import scala.collection.mutable
 object Runner {
   def main(args: Array[String]): Unit = {
     time {
-      //digitsExample()
+      //digitsExample
       distributedExample()
+      //distributedExampleWithPlots()
       //testGraph()
     } 
   }
@@ -71,13 +72,123 @@ object Runner {
 
     println("Reading done.")
 
+    val split = 60
+
+    val validation_data = new ArrayBuffer[Double](split)
+    var validation_weights = new ArrayBuffer[DenseMatrix[Double]](1)
+    var validation_highest = 0
+
+    for (idx <- Range(0, 1).inclusive) {
+      val min = inputs.map(characteristic => characteristic(idx)).min
+      val max = inputs.map(characteristic => characteristic(idx)).max
+
+      val spread = max - min
+      if (spread != 0) {
+        inputs.map(arr => arr(idx) = ((arr(idx) - min) / spread))
+      }
+    }
+
+    println("Normalization done.")
+
+    //Convert labels to 1-0 vectors
+    val labelMap = HashMap[String, List[Double]](("Mesos", List(1.0)),
+      ("Omega", List(0.0)))
+    val classificationVectors: ArrayBuffer[List[Double]] = labels.map(l => labelMap(l))
+
+    //Neural network
+    val neuronsInLayers = List(2, 10, 1)
+    val sigmoid = new SigmoidFunction(1)
+    val gamma = 0.1
+    val nn: NeuralNetwork = new FeedForwardNeuralNetwork(neuronsInLayers, sigmoid, gamma)
+
+    val r = new Random()
+
+    val pairs = r.shuffle(inputs.zip(classificationVectors).toSeq)
+
+    //Split into training and testing sets
+    val (testing, trainingtmp) = pairs.splitAt(split)
+
+    val (validating, training) = trainingtmp.splitAt(split)
+
+    var epoch = 0
+    var epochStop = 0
+
+    while(nn.getMaxDelta > 0.000001 && epoch != 10000) {
+      epoch += 1
+      for(train <- training) {
+        nn.train(train._1, train._2)
+      }
+
+      val tmp_results = for(validate <- validating) yield {
+        nn.classify(validate._1).map(sigmoid.customRound(_)) == validate._2.map(sigmoid.customRound(_))
+      }
+
+      var validation_tmp_result = tmp_results.count(r => r)
+
+      if (validation_highest <= validation_tmp_result) {
+        epochStop = epoch
+        validation_weights = nn.getWeights()
+        validation_highest = validation_tmp_result
+      }
+      validation_data += validation_tmp_result
+    }
+
+    println("Epoch number in total: " + epoch + " (max is 10000)")
+    println("Best result on validation set : " + validation_highest + "/" + split + " on epoch n°" + epochStop)
+
+    println("Training done.")
+
+    nn.setWeights(validation_weights)
+
+    //Testing the neural network
+    var results = for(test <- testing) yield {
+      nn.classify(test._1).map(sigmoid.customRound(_)) == test._2.map(sigmoid.customRound(_))
+    }
+
+    println("Testing done.")
+
+    var successCount = results.count(r => r)
+    var percentage = BigDecimal(((successCount:Double)/(split:Double))*100).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+
+    println(s"Upon testin g the neural network got $successCount/$split results right -> $percentage%.")
+
+  }
+
+  def distributedExampleWithPlots(): Unit = {
+
+    println("Starting.")
+
+    val f = new File("example_data/Training-set-v2.xlsx")
+    val workbook = WorkbookFactory.create(f)
+    val sheet = workbook.getSheetAt(0)
+
+    var inputs = new ArrayBuffer[ArrayBuffer[Double]]
+    var labels = new ArrayBuffer[String]
+
+    for (row <- sheet) {
+      if (row.getRowNum() > 1) {
+        var tmpArray = new ArrayBuffer[Double]()
+        tmpArray += row.getCell(0).getStringCellValue.toDouble
+        tmpArray += row.getCell(1).getStringCellValue.toDouble
+        inputs += tmpArray
+
+        // If yellow then Mesos is better
+        // Else Omega is better
+        if (row.getCell(15).getNumericCellValue == 0) {
+          labels += "Mesos"
+        } else {
+          labels += "Omega"
+        }
+      }
+    }
+
+    println("Reading done.")
+
     val split = 70
 
     /*
      * Plots variables
      */
-
-    val activate_plots = false
 
     val tab_plot1_x = new ArrayBuffer[Double](inputs.size - split)
     val tab_plot1_y = new ArrayBuffer[Double](inputs.size - split)
@@ -137,17 +248,13 @@ object Runner {
     while(nn.getMaxDelta > 0.000001 && epoch != 3000) {
     //while(epoch != maxEpoch) {
       epoch += 1
-      if (activate_plots) {
-        tab_plot1_x.clear()
-        tab_plot1_y.clear()
-      }
+      tab_plot1_x.clear()
+      tab_plot1_y.clear()
       for(train <- training) {
         val plot_tmp = nn.train(train._1, train._2)
 
-        if (activate_plots) {
-          tab_plot1_y += plot_tmp(0)
-          tab_plot1_x += plot_tmp(1)
-        }
+        tab_plot1_y += plot_tmp(0)
+        tab_plot1_x += plot_tmp(1)
       }
 
       val tmp_results = for(validate <- validating) yield {
@@ -163,19 +270,17 @@ object Runner {
       validation_data += validation_tmp_result
     }
 
-    if (activate_plots) {
-      for (i <- Range(0, inputs.size - split)) {
-        if (tab_plot1_x(i) == 0) {
-          total1_y(0) += 1
-          points1_y(0) += tab_plot1_y(i)
-        } else {
-          total1_y(1) += 1
-          points1_y(1) += tab_plot1_y(i)
-        }
+    for (i <- Range(0, training.size)) {
+      if (tab_plot1_x(i) == 0) {
+        total1_y(0) += 1
+        points1_y(0) += tab_plot1_y(i)
+      } else {
+        total1_y(1) += 1
+        points1_y(1) += tab_plot1_y(i)
       }
-      points1_y(0) = points1_y(0) / total1_y(0)
-      points1_y(1) = points1_y(1) / total1_y(1)
     }
+    points1_y(0) = points1_y(0) / total1_y(0)
+    points1_y(1) = points1_y(1) / total1_y(1)
 
     println("Epoch number in total: " + epoch + " (max is 3000)")
     println("Best result on validation set : " + validation_highest + "/" + split + " on epoch n°" + epochStop)
@@ -186,10 +291,8 @@ object Runner {
 
     //Testing the neural network
     var results = for(test <- testing) yield {
-      if (activate_plots) {
-        tab_plot2_y += nn.classify(test._1)(0)
-        tab_plot2_x += test._2.map(sigmoid.customRound(_)).head.toDouble
-      }
+      tab_plot2_y += nn.classify(test._1)(0)
+      tab_plot2_x += test._2.map(sigmoid.customRound(_)).head.toDouble
       nn.classify(test._1).map(sigmoid.customRound(_)) == test._2.map(sigmoid.customRound(_))
     }
 
@@ -200,7 +303,6 @@ object Runner {
 
     println(s"Upon testing the neural network got $successCount/$split results right -> $percentage%.")
 
-    if (activate_plots) {
       for (i <- Range(0, 30)) {
         if (tab_plot2_x(i) == 0) {
           total2_y(0) += 1
@@ -281,7 +383,6 @@ object Runner {
       draw(testing_plot, "testing-plot", writer.FileOptions(overwrite = true))
       draw(training_plot_error, "training-plot-error", writer.FileOptions(overwrite = true))
       draw(testing_plot_error, "testing-plot-error", writer.FileOptions(overwrite = true))
-    }
   }
 
   def digitsExample(): Unit = {
@@ -359,6 +460,8 @@ object Runner {
     val percentage = BigDecimal(((successCount:Double)/(split:Double))*100).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
 
     println(s"Upon testing the neural network got $successCount/$split results right -> $percentage%.")
+
+    println(nn.getWeights())
 
   }
 
